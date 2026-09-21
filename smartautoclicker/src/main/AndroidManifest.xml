@@ -20,7 +20,6 @@
         android:theme="@style/Theme.SmartAutoClicker"
         tools:targetApi="34">
 
-        <!-- Main Launcher Activity -->
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
@@ -31,7 +30,8 @@
             </intent-filter>
         </activity>
 
-        <!-- Media Projection Permission Activity (Isolated Task to prevent minimizing games on ColorOS 16) -->
+        <!-- Media Projection Permission Activity -->
+        <!-- Added launchMode="singleInstance" and taskAffinity="" to prevent minimizing full-screen games on ColorOS 16 -->
         <activity
             android:name=".ui.permission.MediaProjectionPermissionActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
@@ -40,14 +40,12 @@
             android:excludeFromRecents="true"
             android:exported="false" />
 
-        <!-- Overlay Control Service -->
         <service
             android:name=".service.OverlayService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
-        <!-- Quick Settings Tile -->
         <service
             android:name=".service.QuickSettingsTileService"
             android:exported="true"
