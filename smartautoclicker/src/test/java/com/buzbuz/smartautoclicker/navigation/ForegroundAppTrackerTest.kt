@@ -43,11 +43,11 @@ class ForegroundAppTrackerTest {
 
     @Before
     fun setUp() {
-        val homeResolveInfo: ResolveInfo = mockk {
-            every { activityInfo } returns mockk<ActivityInfo> {
-                every { packageName } returns HOME_PACKAGE
-            }
-        }
+        val homeActivityInfo: ActivityInfo = mockk(relaxed = true)
+        homeActivityInfo.packageName = HOME_PACKAGE
+
+        val homeResolveInfo: ResolveInfo = mockk(relaxed = true)
+        homeResolveInfo.activityInfo = homeActivityInfo
 
         every { context.packageName } returns KLICKR_PACKAGE
         every { context.packageManager } returns packageManager
