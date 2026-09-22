@@ -122,12 +122,7 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
             scenario = scenario,
         )
 
-        if (scenarioStarted) {
-            moveTaskToBack(true)
-            finish()
-        } else {
-            Toast.makeText(this, R.string.toast_denied_foreground_permission, Toast.LENGTH_SHORT).show()
-        }
+        handleScenarioStartResult(scenarioStarted)
     }
 
     private fun handleScenarioStartResult(result: Boolean) {
