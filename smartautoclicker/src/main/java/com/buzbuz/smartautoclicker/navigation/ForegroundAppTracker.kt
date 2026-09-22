@@ -25,17 +25,24 @@ import javax.inject.Singleton
 
 /** Remembers the user application that was visible before Klick'r was opened. */
 @Singleton
-class ForegroundAppTracker @Inject constructor(
-    @ApplicationContext private val context: Context,
+class ForegroundAppTracker private constructor(
+    private val context: Context,
+    private val homePackageNameProvider: () -> String?,
 ) {
 
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(
+        context = context,
+        homePackageNameProvider = { resolveHomePackageName(context) },
+    )
+
+    internal constructor(context: Context, homePackageName: String?) : this(
+        context = context,
+        homePackageNameProvider = { homePackageName },
+    )
+
     private val packageManager = context.packageManager
-    private val homePackageName: String? by lazy {
-        packageManager.resolveActivity(
-            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
-            0,
-        )?.activityInfo?.packageName
-    }
+    private val homePackageName: String? by lazy(homePackageNameProvider)
 
     @Volatile
     private var foregroundPackageName: String? = null
@@ -70,6 +77,14 @@ class ForegroundAppTracker @Inject constructor(
             Log.w(TAG, "Can't restore previous foreground package $packageName", exception)
             false
         }
+    }
+
+    private companion object {
+        fun resolveHomePackageName(context: Context): String? =
+            context.packageManager.resolveActivity(
+                Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
+                0,
+            )?.activityInfo?.packageName
     }
 }
 

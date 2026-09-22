@@ -18,9 +18,7 @@ package com.buzbuz.smartautoclicker.navigation
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -43,20 +41,13 @@ class ForegroundAppTrackerTest {
 
     @Before
     fun setUp() {
-        val homeActivityInfo: ActivityInfo = mockk(relaxed = true)
-        homeActivityInfo.packageName = HOME_PACKAGE
-
-        val homeResolveInfo: ResolveInfo = mockk(relaxed = true)
-        homeResolveInfo.activityInfo = homeActivityInfo
-
         every { context.packageName } returns KLICKR_PACKAGE
         every { context.packageManager } returns packageManager
         every { context.startActivity(any()) } just Runs
-        every { packageManager.resolveActivity(any(), 0) } returns homeResolveInfo
         every { packageManager.getLaunchIntentForPackage(any()) } returns null
         every { packageManager.getLaunchIntentForPackage(GAME_PACKAGE) } returns gameLaunchIntent
 
-        tracker = ForegroundAppTracker(context)
+        tracker = ForegroundAppTracker(context, HOME_PACKAGE)
     }
 
     @Test
