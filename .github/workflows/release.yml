@@ -17,6 +17,11 @@ jobs:
         distribution: 'zulu'
         java-version: '21'
 
+    - name: Set up Gradle cache
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        cache-cleanup: on-success
+
     - name: set NDK
       shell: bash
       run: |
