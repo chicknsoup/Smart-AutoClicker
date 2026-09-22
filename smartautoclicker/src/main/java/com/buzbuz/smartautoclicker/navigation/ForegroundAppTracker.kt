@@ -28,20 +28,17 @@ import javax.inject.Singleton
 class ForegroundAppTracker private constructor(
     private val context: Context,
     private val homePackageNameProvider: () -> String?,
-    private val isTrackingEnabledProvider: () -> Boolean,
 ) {
 
     @Inject
     constructor(@ApplicationContext context: Context) : this(
         context = context,
         homePackageNameProvider = { resolveHomePackageName(context) },
-        isTrackingEnabledProvider = { context.getScenarioReturnMode() == RETURN_MODE_RESTORE_APP },
     )
 
     internal constructor(context: Context, homePackageName: String?) : this(
         context = context,
         homePackageNameProvider = { homePackageName },
-        isTrackingEnabledProvider = { true },
     )
 
     private val packageManager = context.packageManager
@@ -52,11 +49,6 @@ class ForegroundAppTracker private constructor(
 
     /** Records a foreground-window change reported by the accessibility service. */
     fun onWindowStateChanged(packageName: CharSequence?) {
-        if (!isTrackingEnabledProvider()) {
-            foregroundPackageName = null
-            return
-        }
-
         val newPackageName = packageName?.toString() ?: return
 
         when {

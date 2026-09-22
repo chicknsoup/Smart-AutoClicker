@@ -34,9 +34,6 @@ import com.buzbuz.smartautoclicker.core.dumb.domain.model.DumbScenario
 import com.buzbuz.smartautoclicker.core.ui.errors.createNoMediaProjectionDialog
 import com.buzbuz.smartautoclicker.feature.revenue.UserConsentState
 import com.buzbuz.smartautoclicker.navigation.ForegroundAppTracker
-import com.buzbuz.smartautoclicker.navigation.RETURN_MODE_RESTORE_APP
-import com.buzbuz.smartautoclicker.navigation.RETURN_MODE_TRANSLUCENT
-import com.buzbuz.smartautoclicker.navigation.getScenarioReturnMode
 import com.buzbuz.smartautoclicker.scenarios.viewmodel.ScenarioViewModel
 
 import dagger.hilt.android.AndroidEntryPoint
@@ -64,16 +61,10 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
     /** Application displayed before this activity was launched. */
     private var previousAppPackageName: String? = null
 
-    /** Experimental strategy selected in the external features file. */
-    private var scenarioReturnMode: Int = 0
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        scenarioReturnMode = getScenarioReturnMode()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        if (scenarioReturnMode == RETURN_MODE_RESTORE_APP) {
-            previousAppPackageName = foregroundAppTracker.snapshot()
-        }
+        previousAppPackageName = foregroundAppTracker.snapshot()
         setContentView(R.layout.activity_scenario)
 
         scenarioViewModel.stopScenario()
@@ -144,14 +135,8 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
 
     private fun handleScenarioStartResult(result: Boolean) {
         if (result) {
-            when (scenarioReturnMode) {
-                RETURN_MODE_RESTORE_APP -> {
-                    if (foregroundAppTracker.restore(previousAppPackageName)) finish()
-                    else finishAndRemoveTask()
-                }
-                RETURN_MODE_TRANSLUCENT -> finish()
-                else -> finishAndRemoveTask()
-            }
+            foregroundAppTracker.restore(previousAppPackageName)
+            finish()
         } else Toast.makeText(this, R.string.toast_denied_foreground_permission, Toast.LENGTH_SHORT).show()
     }
 
