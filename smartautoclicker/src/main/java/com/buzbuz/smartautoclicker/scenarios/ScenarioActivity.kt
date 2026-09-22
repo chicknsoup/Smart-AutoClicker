@@ -115,12 +115,19 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
     }
 
     private fun startSmartScenario(resultCode: Int, data: Intent, scenario: Scenario) {
-        handleScenarioStartResult(scenarioViewModel.loadSmartScenario(
+        val scenarioStarted = scenarioViewModel.loadSmartScenario(
             context = this,
             resultCode = resultCode,
             data = data,
             scenario = scenario,
-        ))
+        )
+
+        if (scenarioStarted) {
+            moveTaskToBack(true)
+            finish()
+        } else {
+            Toast.makeText(this, R.string.toast_denied_foreground_permission, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun handleScenarioStartResult(result: Boolean) {

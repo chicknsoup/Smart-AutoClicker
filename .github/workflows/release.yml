@@ -40,6 +40,13 @@ jobs:
       env:
         JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
 
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: fDroid-release-apks
+        path: smartautoclicker/build/outputs/apk/fDroid/release/*.apk
+        if-no-files-found: error
+
     - name: Create draft release with APKs
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
