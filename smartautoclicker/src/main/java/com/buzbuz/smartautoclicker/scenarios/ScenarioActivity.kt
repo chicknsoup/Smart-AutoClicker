@@ -62,10 +62,9 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
     private var previousAppPackageName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        previousAppPackageName = foregroundAppTracker.snapshot()
-
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        previousAppPackageName = foregroundAppTracker.snapshot()
         setContentView(R.layout.activity_scenario)
 
         scenarioViewModel.stopScenario()
