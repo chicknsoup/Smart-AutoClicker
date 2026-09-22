@@ -47,6 +47,7 @@ import com.buzbuz.smartautoclicker.feature.qstile.domain.QSTileRepository
 import com.buzbuz.smartautoclicker.feature.revenue.IRevenueRepository
 import com.buzbuz.smartautoclicker.feature.review.ReviewRepository
 import com.buzbuz.smartautoclicker.localservice.LocalService
+import com.buzbuz.smartautoclicker.navigation.ForegroundAppTracker
 
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.FileDescriptor
@@ -87,6 +88,7 @@ class SmartAutoClickerService : AccessibilityService() {
     @Inject lateinit var actionExecutor: AndroidActionExecutor
     @Inject lateinit var debuggingRepository: DebuggingRepository
     @Inject lateinit var tutorialRepository: TutorialRepository
+    @Inject lateinit var foregroundAppTracker: ForegroundAppTracker
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -200,7 +202,11 @@ class SmartAutoClickerService : AccessibilityService() {
     }
 
     override fun onInterrupt() { /* Unused */ }
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) { /* Unused */ }
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            foregroundAppTracker.onWindowStateChanged(event.packageName)
+        }
+    }
 }
 
 /** Tag for the logs. */

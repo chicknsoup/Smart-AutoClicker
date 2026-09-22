@@ -33,9 +33,11 @@ import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
 import com.buzbuz.smartautoclicker.core.dumb.domain.model.DumbScenario
 import com.buzbuz.smartautoclicker.core.ui.errors.createNoMediaProjectionDialog
 import com.buzbuz.smartautoclicker.feature.revenue.UserConsentState
+import com.buzbuz.smartautoclicker.navigation.ForegroundAppTracker
 import com.buzbuz.smartautoclicker.scenarios.viewmodel.ScenarioViewModel
 
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Entry point activity for the application.
@@ -44,6 +46,8 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
+
+    @Inject lateinit var foregroundAppTracker: ForegroundAppTracker
 
     /** ViewModel providing the click scenarios data to the UI. */
     private val scenarioViewModel: ScenarioViewModel by viewModels()
@@ -54,7 +58,12 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
     /** Scenario clicked by the user. */
     private var requestedItem: ScenarioListUiState.Item.ScenarioItem? = null
 
+    /** Application displayed before this activity was launched. */
+    private var previousAppPackageName: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        previousAppPackageName = foregroundAppTracker.snapshot()
+
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scenario)
@@ -126,8 +135,10 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
     }
 
     private fun handleScenarioStartResult(result: Boolean) {
-        if (result) finish()
-        else Toast.makeText(this, R.string.toast_denied_foreground_permission, Toast.LENGTH_SHORT).show()
+        if (result) {
+            foregroundAppTracker.restore(previousAppPackageName)
+            finish()
+        } else Toast.makeText(this, R.string.toast_denied_foreground_permission, Toast.LENGTH_SHORT).show()
     }
 
     private fun showProjectionDeniedToast() {

@@ -58,7 +58,7 @@ android {
         applicationId = getExtraActualApplicationId()
 
         versionCode = 100
-        versionName = "4.0.5"
+        versionName = "4.0.5f"
     }
 
     if (project.isBuildForVariant(KlickrFlavour.F_DROID, KlickrBuildType.DEBUG)) {
