@@ -69,8 +69,6 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         scenarioReturnMode = getScenarioReturnMode()
-        if (scenarioReturnMode == RETURN_MODE_TRANSLUCENT) setTheme(R.style.AppTheme_ScenarioTranslucent)
-
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (scenarioReturnMode == RETURN_MODE_RESTORE_APP) {
