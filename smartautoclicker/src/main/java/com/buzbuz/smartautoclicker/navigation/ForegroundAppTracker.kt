@@ -48,7 +48,9 @@ class ForegroundAppTracker private constructor(
     private var foregroundPackageName: String? = null
 
     /** Records a foreground-window change reported by the accessibility service. */
-    fun onWindowStateChanged(packageName: CharSequence?) {
+    fun onWindowStateChanged(packageName: CharSequence?, isFullScreen: Boolean) {
+        if (!isFullScreen) return
+
         val newPackageName = packageName?.toString() ?: return
 
         when {

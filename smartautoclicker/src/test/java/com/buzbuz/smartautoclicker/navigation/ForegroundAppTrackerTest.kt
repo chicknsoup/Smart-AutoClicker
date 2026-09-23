@@ -52,23 +52,31 @@ class ForegroundAppTrackerTest {
 
     @Test
     fun onWindowStateChanged_launchableApp_updatesSnapshot() {
-        tracker.onWindowStateChanged(GAME_PACKAGE)
+        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
 
         assertEquals(GAME_PACKAGE, tracker.snapshot())
     }
 
     @Test
     fun onWindowStateChanged_transientSystemWindow_keepsPreviousApp() {
-        tracker.onWindowStateChanged(GAME_PACKAGE)
-        tracker.onWindowStateChanged(SYSTEM_UI_PACKAGE)
+        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
+        tracker.onWindowStateChanged(SYSTEM_UI_PACKAGE, isFullScreen = true)
+
+        assertEquals(GAME_PACKAGE, tracker.snapshot())
+    }
+
+    @Test
+    fun onWindowStateChanged_floatingApp_keepsFullScreenApp() {
+        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
+        tracker.onWindowStateChanged(CHAT_PACKAGE, isFullScreen = false)
 
         assertEquals(GAME_PACKAGE, tracker.snapshot())
     }
 
     @Test
     fun onWindowStateChanged_home_clearsPreviousApp() {
-        tracker.onWindowStateChanged(GAME_PACKAGE)
-        tracker.onWindowStateChanged(HOME_PACKAGE)
+        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
+        tracker.onWindowStateChanged(HOME_PACKAGE, isFullScreen = true)
 
         assertNull(tracker.snapshot())
     }
@@ -91,5 +99,6 @@ class ForegroundAppTrackerTest {
 
 private const val KLICKR_PACKAGE = "com.buzbuz.smartautoclicker"
 private const val GAME_PACKAGE = "com.example.game"
+private const val CHAT_PACKAGE = "com.example.chat"
 private const val HOME_PACKAGE = "com.example.launcher"
 private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
