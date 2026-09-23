@@ -46,39 +46,63 @@ class ForegroundAppTrackerTest {
         every { context.startActivity(any()) } just Runs
         every { packageManager.getLaunchIntentForPackage(any()) } returns null
         every { packageManager.getLaunchIntentForPackage(GAME_PACKAGE) } returns gameLaunchIntent
+        every { packageManager.getLaunchIntentForPackage(CHAT_PACKAGE) } returns mockk(relaxed = true)
 
         tracker = ForegroundAppTracker(context, HOME_PACKAGE)
     }
 
     @Test
     fun onWindowStateChanged_launchableApp_updatesSnapshot() {
-        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
+        tracker.onWindowStateChanged(GAME_PACKAGE)
 
         assertEquals(GAME_PACKAGE, tracker.snapshot())
     }
 
     @Test
     fun onWindowStateChanged_transientSystemWindow_keepsPreviousApp() {
-        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
-        tracker.onWindowStateChanged(SYSTEM_UI_PACKAGE, isFullScreen = true)
-
-        assertEquals(GAME_PACKAGE, tracker.snapshot())
-    }
-
-    @Test
-    fun onWindowStateChanged_floatingApp_keepsFullScreenApp() {
-        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
-        tracker.onWindowStateChanged(CHAT_PACKAGE, isFullScreen = false)
+        tracker.onWindowStateChanged(GAME_PACKAGE)
+        tracker.onWindowStateChanged(SYSTEM_UI_PACKAGE)
 
         assertEquals(GAME_PACKAGE, tracker.snapshot())
     }
 
     @Test
     fun onWindowStateChanged_home_clearsPreviousApp() {
-        tracker.onWindowStateChanged(GAME_PACKAGE, isFullScreen = true)
-        tracker.onWindowStateChanged(HOME_PACKAGE, isFullScreen = true)
+        tracker.onWindowStateChanged(GAME_PACKAGE)
+        tracker.onWindowStateChanged(HOME_PACKAGE)
 
         assertNull(tracker.snapshot())
+    }
+
+    @Test
+    fun onVisibleWindowsChanged_hiddenFloatingApp_fallsBackToVisibleGame() {
+        tracker.onWindowStateChanged(GAME_PACKAGE)
+        tracker.onWindowStateChanged(CHAT_PACKAGE)
+
+        tracker.onVisibleWindowsChanged(setOf(GAME_PACKAGE))
+
+        assertEquals(GAME_PACKAGE, tracker.snapshot())
+    }
+
+    @Test
+    fun onVisibleWindowsChanged_inconclusiveData_keepsLatestApp() {
+        tracker.onWindowStateChanged(GAME_PACKAGE)
+        tracker.onWindowStateChanged(CHAT_PACKAGE)
+
+        tracker.onVisibleWindowsChanged(emptySet())
+
+        assertEquals(CHAT_PACKAGE, tracker.snapshot())
+    }
+
+    @Test
+    fun onVisibleWindowsChanged_afterKlickrOpens_doesNotChangeSnapshot() {
+        tracker.onWindowStateChanged(GAME_PACKAGE)
+        tracker.onWindowStateChanged(CHAT_PACKAGE)
+        tracker.onWindowStateChanged(KLICKR_PACKAGE)
+
+        tracker.onVisibleWindowsChanged(setOf(GAME_PACKAGE))
+
+        assertEquals(CHAT_PACKAGE, tracker.snapshot())
     }
 
     @Test

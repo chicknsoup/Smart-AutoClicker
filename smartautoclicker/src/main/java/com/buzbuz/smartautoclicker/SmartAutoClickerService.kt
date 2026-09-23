@@ -19,11 +19,9 @@ package com.buzbuz.smartautoclicker
 import android.accessibilityservice.AccessibilityService
 import android.app.Notification
 import android.content.Intent
-import android.graphics.Rect
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityWindowInfo
 
 import com.buzbuz.smartautoclicker.core.base.Dumpable
 import com.buzbuz.smartautoclicker.core.base.data.AppComponentsProvider
@@ -205,33 +203,19 @@ class SmartAutoClickerService : AccessibilityService() {
 
     override fun onInterrupt() { /* Unused */ }
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            foregroundAppTracker.onWindowStateChanged(
-                packageName = event.packageName,
-                isFullScreen = isFullScreenApplicationWindow(event.windowId),
-            )
+        when (event?.eventType) {
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ->
+                foregroundAppTracker.onWindowStateChanged(event.packageName)
+
+            AccessibilityEvent.TYPE_WINDOWS_CHANGED -> {
+                val visiblePackages = windows.mapNotNullTo(mutableSetOf()) { window ->
+                    window.root?.packageName?.toString()
+                }
+                foregroundAppTracker.onVisibleWindowsChanged(visiblePackages)
+            }
         }
-    }
-
-    private fun isFullScreenApplicationWindow(windowId: Int): Boolean {
-        val eventWindow = windows.firstOrNull { window -> window.id == windowId }
-            ?.takeIf { window -> window.type == AccessibilityWindowInfo.TYPE_APPLICATION }
-            ?: return false
-
-        val windowBounds = Rect()
-        eventWindow.getBoundsInScreen(windowBounds)
-
-        val displayMetrics = resources.displayMetrics
-        val horizontalTolerance = displayMetrics.widthPixels * MAX_SCREEN_EDGE_GAP_RATIO
-        val verticalTolerance = displayMetrics.heightPixels * MAX_SCREEN_EDGE_GAP_RATIO
-
-        return windowBounds.left <= horizontalTolerance &&
-                windowBounds.top <= verticalTolerance &&
-                windowBounds.right >= displayMetrics.widthPixels - horizontalTolerance &&
-                windowBounds.bottom >= displayMetrics.heightPixels - verticalTolerance
     }
 }
 
 /** Tag for the logs. */
 private const val TAG = "SmartAutoClickerService"
-private const val MAX_SCREEN_EDGE_GAP_RATIO = 0.05f

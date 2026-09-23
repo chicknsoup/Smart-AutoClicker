@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.ArrayDeque
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,26 +45,44 @@ class ForegroundAppTracker private constructor(
     private val packageManager = context.packageManager
     private val homePackageName: String? by lazy(homePackageNameProvider)
 
-    @Volatile
-    private var foregroundPackageName: String? = null
+    private val foregroundPackageHistory = ArrayDeque<String>()
+    private var isTrackingFrozen = false
 
     /** Records a foreground-window change reported by the accessibility service. */
-    fun onWindowStateChanged(packageName: CharSequence?, isFullScreen: Boolean) {
-        if (!isFullScreen) return
-
+    fun onWindowStateChanged(packageName: CharSequence?) {
         val newPackageName = packageName?.toString() ?: return
 
         when {
-            newPackageName == context.packageName -> Unit
-            newPackageName == homePackageName -> foregroundPackageName = null
+            newPackageName == context.packageName -> isTrackingFrozen = true
+            newPackageName == homePackageName -> {
+                foregroundPackageHistory.clear()
+                isTrackingFrozen = false
+            }
             packageManager.getLaunchIntentForPackage(newPackageName) != null -> {
-                foregroundPackageName = newPackageName
+                isTrackingFrozen = false
+                foregroundPackageHistory.remove(newPackageName)
+                foregroundPackageHistory.addLast(newPackageName)
+                if (foregroundPackageHistory.size > MAX_HISTORY_SIZE) foregroundPackageHistory.removeFirst()
             }
         }
     }
 
+    /** Falls back when a floating app disappears and an older tracked app remains visible. */
+    fun onVisibleWindowsChanged(visiblePackages: Set<String>) {
+        if (isTrackingFrozen || visiblePackages.isEmpty()) return
+        foregroundPackageHistory.peekLast()?.let { currentPackage ->
+            if (currentPackage in visiblePackages) return
+        }
+
+        val visibleFallback = foregroundPackageHistory.lastOrNull { packageName ->
+            packageName in visiblePackages
+        } ?: return
+
+        while (foregroundPackageHistory.peekLast() != visibleFallback) foregroundPackageHistory.removeLast()
+    }
+
     /** Takes a stable snapshot before Klick'r and system permission windows become foreground. */
-    fun snapshot(): String? = foregroundPackageName
+    fun snapshot(): String? = foregroundPackageHistory.peekLast()
 
     /** Brings the snapshotted application's existing task to the foreground when possible. */
     fun restore(packageName: String?): Boolean {
@@ -91,3 +110,4 @@ class ForegroundAppTracker private constructor(
 }
 
 private const val TAG = "ForegroundAppTracker"
+private const val MAX_HISTORY_SIZE = 5
